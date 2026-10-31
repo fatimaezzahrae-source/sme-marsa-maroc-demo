@@ -1,7 +1,14 @@
 # Système de Monitoring Énergétique (SME) — Marsa Maroc Port d'Agadir
 ## Marché n° 12/DEPA/2026 • Conformité ISO 50001:2018
 
-Application web interactive complète de simulation pour la supervision et le management énergétique des postes électriques de **Marsa Maroc** à la **Direction d'Exploitation au Port d'Agadir (DEPA)**.
+> **Important — Données simulées, démonstration** : Cette plateforme est un démonstrateur interactif de simulation pour le Système de Monitoring Énergétique (SME) de Marsa Maroc — Direction d'Exploitation au Port d'Agadir (DEPA). Toutes les mesures de télémétrie électrique et Modbus sont simulées à des fins de démonstration technique et de conformité aux exigences fonctionnelles du CPS et de la norme ISO 50001:2018.
+
+---
+
+## 🌐 Déploiement & Accès en Ligne
+
+- **Site Web Hébergé (GitHub Pages)** : [https://fatimaezzahrae-source.github.io/sme-marsa-maroc-demo/](https://fatimaezzahrae-source.github.io/sme-marsa-maroc-demo/)
+- **Dépôt GitHub** : [https://github.com/fatimaezzahrae-source/sme-marsa-maroc-demo](https://github.com/fatimaezzahrae-source/sme-marsa-maroc-demo)
 
 ---
 
@@ -36,7 +43,7 @@ Application web interactive complète de simulation pour la supervision et le ma
    - Comparaison avec la Situation Énergétique de Référence (SER Baseline 2024 normalisée).
    - Graphique de gains cumulés CUSUM (MWh et DH économisés).
    - Diagramme de Pareto des Usages Énergétiques Significatifs (loi 80/20).
-   - Cartographie des flux d'énergie (Sankey simplifié) et Plan d'Actions Énergétiques (PAE).
+   - Cartographie des flux d'énergie (Sankey) et Plan d'Actions Énergétiques (PAE).
 
 4. **Gestion des Alertes et Incidents** :
    - Console SCADA en temps réel avec filtrage (Gravité, Statut, Poste).
@@ -55,31 +62,58 @@ Application web interactive complète de simulation pour la supervision et le ma
 
 ---
 
-## 🛠️ Lancement & Gestion du Service
+## 🛠️ Lancement en Local
 
-L'application est configurée pour écouter sur **`0.0.0.0:8000`** et peut être gérée directement en tant que service système :
-
-### Gestion via la commande `service` :
+### Option A — Serveur statique autonome (sans Node.js) :
+L'application étant entièrement compilée de manière autonome à la racine (`index.html` + `./assets/`), vous pouvez la lancer avec n'importe quel serveur HTTP statique :
 ```bash
-# Vérifier l'état du service
-service marsa-maroc-sme status
+# Avec Python 3
+python3 -m http.server 8000
 
-# Démarrer / Redémarrer / Arrêter le service
-service marsa-maroc-sme start
-service marsa-maroc-sme restart
-service marsa-maroc-sme stop
+# Ouvrir dans le navigateur :
+# http://localhost:8000/
 ```
 
-### Gestion via PM2 :
+### Option B — Environnement Node.js / Vite :
 ```bash
-# Voir le statut et les métriques
+# Installation des dépendances
+npm install
+
+# Lancement en mode développement
+npm run dev
+
+# Construction statique pour GitHub Pages
+npm run build
+
+# Aperçu local du build de production
+npm run preview
+```
+
+### Option C — Gestion de service système / PM2 :
+```bash
+# Gestion via le service
+service marsa-maroc-sme status
+service marsa-maroc-sme restart
+
+# Gestion via PM2
 pm2 status
 pm2 logs marsa-maroc-sme
 ```
 
-### Lancement manuel :
+---
+
+## 🔄 Mise à Jour du Site GitHub Pages
+
+Pour modifier le site et republier automatiquement sur GitHub Pages :
 ```bash
-cd /root/marsa-maroc-sme
-npm run start # ou npm run preview
+# 1. Compiler les fichiers statiques de production à la racine
+npm run build
+
+# 2. Enregistrer les modifications
+git add .
+git commit -m "Mise à jour du site"
+
+# 3. Pousser vers GitHub
+git push
 ```
-L'application est accessible sur `http://localhost:8000` (ou `http://0.0.0.0:8000`).
+GitHub Pages déploiera automatiquement la nouvelle version sous 1 à 2 minutes.

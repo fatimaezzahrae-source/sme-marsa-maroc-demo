@@ -8,29 +8,141 @@ import { TARIFF_CONFIG } from '../data/tariffConfig';
 const EnergyContext = createContext();
 
 export const EnergyProvider = ({ children }) => {
+  const VALID_TABS = ['overview', 'measures', 'iso50001', 'alerts', 'reports', 'admin'];
+
+  const getInitialTab = () => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '');
+      if (VALID_TABS.includes(hash)) return hash;
+      try {
+        const saved = localStorage.getItem('marsa_sme_active_tab');
+        if (saved && VALID_TABS.includes(saved)) return saved;
+      } catch (e) {}
+    }
+    return 'overview';
+  };
+
   const [substations, setSubstations] = useState(INITIAL_SUBSTATIONS);
   const [meters, setMeters] = useState(INITIAL_METERS);
-  const [alerts, setAlerts] = useState(INITIAL_ALERTS);
+  const [alerts, setAlerts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('marsa_sme_alerts');
+      return saved ? JSON.parse(saved) : INITIAL_ALERTS;
+    } catch {
+      return INITIAL_ALERTS;
+    }
+  });
   const [isoData, setIsoData] = useState(ISO_50001_DATA);
   const [tariffConfig, setTariffConfig] = useState(TARIFF_CONFIG);
   
-  const [activeTab, setActiveTab] = useState('overview');
-  const [selectedSubstationId, setSelectedSubstationId] = useState('PT-1');
+  const [activeTab, setActiveTabState] = useState(getInitialTab);
+
+  const setActiveTab = (tab) => {
+    if (VALID_TABS.includes(tab)) {
+      setActiveTabState(tab);
+      try {
+        localStorage.setItem('marsa_sme_active_tab', tab);
+        if (window.location.hash.replace('#', '') !== tab) {
+          window.location.hash = tab;
+        }
+      } catch (e) {}
+    }
+  };
+
+  // Sync hash routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (VALID_TABS.includes(hash)) {
+        setActiveTabState(hash);
+        try {
+          localStorage.setItem('marsa_sme_active_tab', hash);
+        } catch (e) {}
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    
+    // Set initial hash if missing
+    const currentHash = window.location.hash.replace('#', '');
+    if (!currentHash || !VALID_TABS.includes(currentHash)) {
+      window.location.hash = activeTab;
+    }
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const [selectedSubstationId, setSelectedSubstationId] = useState(() => {
+    try {
+      return localStorage.getItem('marsa_sme_substation') || 'PT-1';
+    } catch {
+      return 'PT-1';
+    }
+  });
+
   const [selectedMeterId, setSelectedMeterId] = useState('C-101');
-  const [theme, setTheme] = useState('dark');
-  const [activeScenario, setActiveScenario] = useState('NORMAL');
+
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('marsa_sme_theme') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  const [activeScenario, setActiveScenario] = useState(() => {
+    try {
+      return localStorage.getItem('marsa_sme_scenario') || 'NORMAL';
+    } catch {
+      return 'NORMAL';
+    }
+  });
+
   const [isSimulating, setIsSimulating] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(2000); // 2s
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  const [auditLogs, setAuditLogs] = useState([
-    { id: 1, timestamp: new Date(Date.now() - 3600000).toISOString(), user: 'Driss El Mansouri (Admin)', action: 'Connexion superviseur SCADA', details: 'Session ouverte depuis 192.168.10.5' },
-    { id: 2, timestamp: new Date(Date.now() - 2400000).toISOString(), user: 'Fatima-Zahra Alami (Resp. Énergie)', action: 'Revue IPE Octobre 2026', details: 'Validation du seuil de référence SER 2024' },
-    { id: 3, timestamp: new Date(Date.now() - 1200000).toISOString(), user: 'Karim Benali (Opérateur)', action: 'Acquittement alerte ALT-2026-002', details: 'Observation harmonique STS-01' },
-  ]);
+  const [auditLogs, setAuditLogs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('marsa_sme_audit_logs');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { id: 1, timestamp: new Date(Date.now() - 3600000).toISOString(), user: 'Driss El Mansouri (Admin)', action: 'Connexion superviseur SCADA', details: 'Session ouverte depuis 192.168.10.5' },
+      { id: 2, timestamp: new Date(Date.now() - 2400000).toISOString(), user: 'Fatima-Zahra Alami (Resp. Énergie)', action: 'Revue IPE Octobre 2026', details: 'Validation du seuil de référence SER 2024' },
+      { id: 3, timestamp: new Date(Date.now() - 1200000).toISOString(), user: 'Karim Benali (Opérateur)', action: 'Acquittement alerte ALT-2026-002', details: 'Observation harmonique STS-01' },
+    ];
+  });
 
-  // Synchronize document theme class
+  // Save state to localStorage
   useEffect(() => {
+    try {
+      localStorage.setItem('marsa_sme_alerts', JSON.stringify(alerts));
+    } catch {}
+  }, [alerts]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('marsa_sme_audit_logs', JSON.stringify(auditLogs));
+    } catch {}
+  }, [auditLogs]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('marsa_sme_scenario', activeScenario);
+    } catch {}
+  }, [activeScenario]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('marsa_sme_substation', selectedSubstationId);
+    } catch {}
+  }, [selectedSubstationId]);
+
+  // Synchronize document theme class and persist to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('marsa_sme_theme', theme);
+    } catch {}
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
