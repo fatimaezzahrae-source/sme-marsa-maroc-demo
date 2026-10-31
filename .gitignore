@@ -1,0 +1,27 @@
+# Node dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+*.env
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files and directories
+.cache/
+.tmp/
+tmp/
+temp/
+
+# Tender source documents (documents sources de l'appel d'offres)
+/docs-sources/
+docs-sources/
